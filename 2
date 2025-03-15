@@ -1,0 +1,802 @@
+<!-- CSS для стилизации форм -->
+<style>
+  .auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .auth-form {
+    display: none;
+    margin-bottom: 20px;
+  }
+  
+  .auth-form.active {
+    display: block;
+  }
+  
+  .auth-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .auth-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .auth-form button:hover {
+    background-color: #0052a3;
+  }
+  
+  .message {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+  }
+  
+  .success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .error {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .info {
+    background-color: #cce5ff;
+    color: #004085;
+  }
+  
+  .auth-links {
+    text-align: center;
+    margin-top: 10px;
+  }
+  
+  .auth-links a {
+    color: #0066cc;
+    text-decoration: none;
+    cursor: pointer;
+    margin: 0 10px;
+  }
+  
+  .profile-container {
+    display: none;
+  }
+  
+  .profile-container.active {
+    display: block;
+  }
+  
+  .logout-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  /* Добавляем стили для информационного блока после регистрации */
+  .email-confirmation-info {
+    margin: 15px 0;
+    padding: 15px;
+    background-color: #e8f5ff;
+    border-radius: 4px;
+    border-left: 4px solid #0066cc;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .resend-btn {
+    background: none;
+    border: none;
+    color: #0066cc;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 5px;
+    margin-top: 10px;
+    font-size: 14px;
+  }
+  
+  /* Стиль для неактивной кнопки */
+  .resend-btn:disabled {
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+  
+  /* Стиль для таймера */
+  .timer {
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+    display: block;
+  }
+</style>
+
+<!-- HTML для форм авторизации -->
+<div class="auth-container">
+  <!-- Сообщения -->
+  <div id="auth-message" class="message" style="display: none;"></div>
+  
+  <!-- Форма регистрации -->
+  <div id="register-form" class="auth-form active">
+    <h2>Регистрация</h2>
+    <input type="text" id="register-name" placeholder="Ваше имя" required>
+    <input type="email" id="register-email" placeholder="Email" required>
+    <input type="password" id="register-password" placeholder="Пароль" required>
+    <button id="register-btn">Зарегистрироваться</button>
+    <div class="auth-links">
+      <a id="to-login-link">Уже есть аккаунт? Войти</a>
+    </div>
+  </div>
+  
+  <!-- Форма с информацией о подтверждении email -->
+  <div id="email-confirmation-form" class="auth-form">
+    <h2>Подтверждение email</h2>
+    <div class="email-confirmation-info">
+      <p>Мы отправили ссылку для подтверждения на указанный email.</p>
+      <p>Пожалуйста, перейдите по ссылке в письме для завершения регистрации.</p>
+      <p>После подтверждения вы сможете войти в систему, используя свои учетные данные.</p>
+    </div>
+    <button id="resend-link-btn" class="resend-btn">Отправить ссылку повторно</button>
+    <span id="resend-timer" class="timer"></span>
+    <div class="auth-links">
+      <a id="go-to-login" class="to-login-link">Перейти ко входу</a>
+    </div>
+  </div>
+  
+  <!-- Форма входа -->
+  <div id="login-form" class="auth-form">
+    <h2>Вход</h2>
+    <input type="email" id="login-email" placeholder="Email" required>
+    <input type="password" id="login-password" placeholder="Пароль" required>
+    <button id="login-btn">Войти</button>
+    <div class="auth-links">
+      <a id="to-register-link">Создать аккаунт</a>
+      <a id="forgot-password-link">Забыли пароль?</a>
+    </div>
+  </div>
+  
+  <!-- Форма восстановления пароля -->
+  <div id="reset-form" class="auth-form">
+    <h2>Восстановление пароля</h2>
+    <p>Введите ваш email для получения инструкций по восстановлению.</p>
+    <input type="email" id="reset-email" placeholder="Email" required>
+    <button id="reset-btn">Отправить инструкции</button>
+    <div class="auth-links">
+      <a id="to-login-link-from-reset">Вернуться ко входу</a>
+    </div>
+  </div>
+  
+  <!-- Форма ввода кода восстановления -->
+  <div id="reset-code-form" class="auth-form">
+    <h2>Введите код восстановления</h2>
+    <p>Мы отправили код для восстановления на ваш email.</p>
+    <input type="text" id="reset-code" placeholder="Код восстановления" required>
+    <input type="password" id="new-password" placeholder="Новый пароль" required>
+    <button id="confirm-reset-btn">Сбросить пароль</button>
+    <button id="resend-reset-code" class="resend-btn">Отправить код повторно</button>
+    <span id="reset-resend-timer" class="timer"></span>
+    <div class="auth-links">
+      <a id="back-to-login-from-reset-code">Вернуться ко входу</a>
+    </div>
+  </div>
+  
+  <!-- Профиль пользователя -->
+  <div id="profile-container" class="profile-container">
+    <h2>Личный кабинет</h2>
+    <p>Добро пожаловать, <span id="user-name"></span>!</p>
+    <button id="logout-btn" class="logout-btn">Выйти</button>
+  </div>
+</div>
+
+<!-- Подключение Supabase.js -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- JavaScript для работы с Supabase -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация Supabase
+    const supabaseUrl = 'https://xunitidnszlsqupiifhd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bml0aWRuc3psc3F1cGlpZmhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY0MDQsImV4cCI6MjA1NjU5MjQwNH0.8v2dMEaAQYRhHmmJe15XkbA07Tsupc1iLT9oAsLEsWw';
+    
+    // Создание клиента Supabase
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // Временное хранилище для данных пользователя
+    let tempUserData = {
+      email: null,
+      name: null,
+      session: null
+    };
+    
+    // Для таймеров
+    let resendTimer = null;
+    let resetResendTimer = null;
+    const cooldownTime = 60; // время в секундах
+    
+    // Получаем элементы DOM
+    const registerForm = document.getElementById('register-form');
+    const emailConfirmationForm = document.getElementById('email-confirmation-form');
+    const loginForm = document.getElementById('login-form');
+    const resetForm = document.getElementById('reset-form');
+    const resetCodeForm = document.getElementById('reset-code-form');
+    const profileContainer = document.getElementById('profile-container');
+    const authMessage = document.getElementById('auth-message');
+    
+    const registerNameInput = document.getElementById('register-name');
+    const registerEmailInput = document.getElementById('register-email');
+    const registerPasswordInput = document.getElementById('register-password');
+    const registerBtn = document.getElementById('register-btn');
+    
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginBtn = document.getElementById('login-btn');
+    
+    const resetEmailInput = document.getElementById('reset-email');
+    const resetBtn = document.getElementById('reset-btn');
+    
+    const resetCodeInput = document.getElementById('reset-code');
+    const newPasswordInput = document.getElementById('new-password');
+    const confirmResetBtn = document.getElementById('confirm-reset-btn');
+    const resendResetCodeBtn = document.getElementById('resend-reset-code');
+    const resetResendTimerElement = document.getElementById('reset-resend-timer');
+    
+    const resendLinkBtn = document.getElementById('resend-link-btn');
+    const resendTimerElement = document.getElementById('resend-timer');
+    
+    const userNameElement = document.getElementById('user-name');
+    const logoutBtn = document.getElementById('logout-btn');
+    
+    const toLoginLink = document.getElementById('to-login-link');
+    const goToLogin = document.getElementById('go-to-login');
+    const toRegisterLink = document.getElementById('to-register-link');
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    const toLoginLinkFromReset = document.getElementById('to-login-link-from-reset');
+    const backToLoginFromResetCode = document.getElementById('back-to-login-from-reset-code');
+    
+    // Проверка доступности Supabase
+    if (!supabase) {
+      console.error('Ошибка: Supabase клиент не инициализирован');
+      showMessage('Ошибка подключения к базе данных. Обновите страницу или попробуйте позже.', 'error');
+      return;
+    }
+    
+    // Проверяем, авторизован ли пользователь при загрузке страницы
+    checkAuth();
+    
+    // Настраиваем слушатель событий для изменения состояния аутентификации
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_IN') {
+        // Пользователь вошел в систему
+        tempUserData.session = session;
+        
+        // Получаем данные пользователя
+        if (session && session.user) {
+          // Обновляем отображаемое имя пользователя
+          if (session.user.user_metadata && session.user.user_metadata.name) {
+            userNameElement.textContent = session.user.user_metadata.name;
+          } else {
+            userNameElement.textContent = session.user.email;
+          }
+          
+          // Показываем профиль
+          showForm(profileContainer);
+          showMessage('Вход выполнен успешно!', 'success');
+        }
+      } else if (event === 'SIGNED_OUT') {
+        // Пользователь вышел из системы
+        tempUserData = {
+          email: null,
+          name: null,
+          session: null
+        };
+        
+        // Показываем форму входа
+        showForm(loginForm);
+        showMessage('Вы вышли из аккаунта', 'success');
+      } else if (event === 'USER_UPDATED') {
+        // Обработка обновления пользователя (например, подтверждение email)
+        if (session && session.user) {
+          if (session.user.email_confirmed_at) {
+            showMessage('Email успешно подтвержден!', 'success');
+            
+            // Обновляем отображаемое имя
+            if (session.user.user_metadata && session.user.user_metadata.name) {
+              userNameElement.textContent = session.user.user_metadata.name;
+            } else {
+              userNameElement.textContent = session.user.email;
+            }
+            
+            // Показываем профиль
+            showForm(profileContainer);
+          }
+        }
+      } else if (event === 'PASSWORD_RECOVERY') {
+        // Обработка восстановления пароля
+        tempUserData.email = session?.user?.email || tempUserData.email;
+        showForm(resetCodeForm);
+      }
+    });
+    
+    // Обработчики событий для переключения между формами
+    toLoginLink.addEventListener('click', function() {
+      showForm(loginForm);
+    });
+    
+    goToLogin.addEventListener('click', function() {
+      showForm(loginForm);
+    });
+    
+    toRegisterLink.addEventListener('click', function() {
+      showForm(registerForm);
+    });
+    
+    forgotPasswordLink.addEventListener('click', function() {
+      showForm(resetForm);
+    });
+    
+    toLoginLinkFromReset.addEventListener('click', function() {
+      showForm(loginForm);
+    });
+    
+    backToLoginFromResetCode.addEventListener('click', function() {
+      showForm(loginForm);
+    });
+    
+    // Функция для запуска таймера
+    function startTimer(buttonElement, timerElement, callback) {
+      let secondsLeft = cooldownTime;
+      
+      // Отключаем кнопку
+      buttonElement.disabled = true;
+      
+      // Очищаем предыдущий таймер, если он был
+      if (callback === 'resend') {
+        clearInterval(resendTimer);
+        resendTimer = null;
+      } else if (callback === 'resetResend') {
+        clearInterval(resetResendTimer);
+        resetResendTimer = null;
+      }
+      
+      // Показываем начальное значение таймера
+      timerElement.textContent = `Повторная отправка через ${secondsLeft} сек.`;
+      
+      // Создаем интервал
+      const timerId = setInterval(() => {
+        secondsLeft--;
+        
+        if (secondsLeft <= 0) {
+          // Останавливаем таймер
+          clearInterval(timerId);
+          buttonElement.disabled = false;
+          timerElement.textContent = '';
+        } else {
+          // Обновляем отображение таймера
+          timerElement.textContent = `Повторная отправка через ${secondsLeft} сек.`;
+        }
+      }, 1000);
+      
+      // Сохраняем ID таймера
+      if (callback === 'resend') {
+        resendTimer = timerId;
+      } else if (callback === 'resetResend') {
+        resetResendTimer = timerId;
+      }
+      
+      return timerId;
+    }
+    
+    // Регистрация пользователя
+    registerBtn.addEventListener('click', async function() {
+      const name = registerNameInput.value.trim();
+      const email = registerEmailInput.value.trim();
+      const password = registerPasswordInput.value;
+      
+      if (!name || !email || !password) {
+        showMessage('Пожалуйста, заполните все поля', 'error');
+        return;
+      }
+      
+      // Проверка длины пароля
+      if (password.length < 6) {
+        showMessage('Пароль должен содержать минимум 6 символов', 'error');
+        return;
+      }
+      
+      try {
+        // Показываем сообщение о загрузке
+        showMessage('Отправка данных...', 'info');
+        
+        // Регистрация пользователя без редиректа, используем onAuthStateChange для отслеживания
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: password,
+          options: {
+            data: {
+              name: name
+            },
+            // Важно: не используем redirectTo, чтобы избежать редиректов
+            emailRedirectTo: undefined
+          }
+        });
+        
+        if (error) throw error;
+        
+        // Сохраняем email для последующего использования
+        tempUserData.email = email;
+        tempUserData.name = name;
+        
+        // Очищаем поля формы
+        registerNameInput.value = '';
+        registerEmailInput.value = '';
+        registerPasswordInput.value = '';
+        
+        // Показываем форму с информацией о подтверждении email
+        showForm(emailConfirmationForm);
+        showMessage('Мы отправили ссылку для подтверждения на ваш email. Пожалуйста, перейдите по ссылке в письме для завершения регистрации.', 'success');
+        
+        // Запускаем таймер для кнопки повторной отправки
+        startTimer(resendLinkBtn, resendTimerElement, 'resend');
+      } catch (error) {
+        console.error('Ошибка при регистрации:', error);
+        
+        // Более понятное сообщение об ошибке
+        if (error.message.includes('already registered')) {
+          showMessage('Пользователь с таким email уже зарегистрирован', 'error');
+        } else {
+          showMessage('Ошибка при регистрации: ' + error.message, 'error');
+        }
+      }
+    });
+    
+    // Повторная отправка ссылки для подтверждения email
+    resendLinkBtn.addEventListener('click', async function() {
+      if (!tempUserData.email) {
+        showMessage('Сначала необходимо заполнить форму регистрации', 'error');
+        showForm(registerForm);
+        return;
+      }
+      
+      try {
+        showMessage('Отправка новой ссылки...', 'info');
+        
+        // Запрашиваем новую ссылку для подтверждения без редиректа
+        const { error } = await supabase.auth.resend({
+          type: 'signup',
+          email: tempUserData.email,
+          options: {
+            // Важно: не используем redirectTo
+            emailRedirectTo: undefined
+          }
+        });
+        
+        if (error) throw error;
+        
+        showMessage('Новая ссылка для подтверждения отправлена на ваш email', 'success');
+        
+        // Запускаем таймер для кнопки
+        startTimer(resendLinkBtn, resendTimerElement, 'resend');
+      } catch (error) {
+        console.error('Ошибка при отправке ссылки:', error);
+        showMessage('Ошибка при отправке ссылки: ' + error.message, 'error');
+      }
+    });
+    
+    // Вход пользователя
+    loginBtn.addEventListener('click', async function() {
+      const email = loginEmailInput.value.trim();
+      const password = loginPasswordInput.value;
+      
+      if (!email || !password) {
+        showMessage('Пожалуйста, заполните все поля', 'error');
+        return;
+      }
+      
+      try {
+        showMessage('Выполняется вход...', 'info');
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+        
+        if (error) throw error;
+        
+        // После успешного входа onAuthStateChange обработает событие SIGNED_IN
+        
+        // Очищаем поля формы
+        loginEmailInput.value = '';
+        loginPasswordInput.value = '';
+      } catch (error) {
+        console.error('Ошибка при входе:', error);
+        
+        // Более понятное сообщение об ошибке
+        if (error.message.includes('Invalid login credentials')) {
+          showMessage('Неверный email или пароль', 'error');
+        } else if (error.message.includes('Email not confirmed')) {
+          // Сохраняем email для формы подтверждения
+          tempUserData.email = email;
+          showMessage('Email не подтвержден. Пожалуйста, перейдите по ссылке, которую мы отправили на ваш email', 'error');
+          showForm(emailConfirmationForm);
+        } else {
+          showMessage('Ошибка при входе: ' + error.message, 'error');
+        }
+      }
+    });
+    
+    // Запрос на сброс пароля
+    resetBtn.addEventListener('click', async function() {
+      const email = resetEmailInput.value.trim();
+      
+      if (!email) {
+        showMessage('Пожалуйста, введите email', 'error');
+        return;
+      }
+      
+      try {
+        showMessage('Отправка инструкций для сброса пароля...', 'info');
+        
+        // Отправляем запрос на сброс пароля без редиректа
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          // Важно: не используем redirectTo
+          redirectTo: undefined
+        });
+        
+        if (error) throw error;
+        
+        // Сохраняем email для формы сброса пароля
+        tempUserData.email = email;
+        
+        // Очищаем поле формы
+        resetEmailInput.value = '';
+        
+        // Показываем форму для ввода кода сброса
+        showForm(resetCodeForm);
+        showMessage('Инструкции для сброса пароля отправлены на указанный email', 'success');
+        
+        // Запускаем таймер для кнопки повторной отправки
+        startTimer(resendResetCodeBtn, resetResendTimerElement, 'resetResend');
+      } catch (error) {
+        console.error('Ошибка при запросе на сброс пароля:', error);
+        showMessage('Ошибка при запросе на сброс пароля: ' + error.message, 'error');
+      }
+    });
+    
+    // Повторная отправка кода для сброса пароля
+    resendResetCodeBtn.addEventListener('click', async function() {
+      if (!tempUserData.email) {
+        showMessage('Сначала необходимо заполнить форму сброса пароля', 'error');
+        showForm(resetForm);
+        return;
+      }
+      
+      try {
+        showMessage('Отправка нового кода...', 'info');
+        
+        // Запрашиваем новый код для сброса пароля без редиректа
+        const { error } = await supabase.auth.resetPasswordForEmail(tempUserData.email, {
+          // Важно: не используем redirectTo
+          redirectTo: undefined
+        });
+        
+        if (error) throw error;
+        
+        showMessage('Новый код для сброса пароля отправлен на ваш email', 'success');
+        
+        // Запускаем таймер для кнопки
+        startTimer(resendResetCodeBtn, resetResendTimerElement, 'resetResend');
+      } catch (error) {
+        console.error('Ошибка при отправке кода:', error);
+        showMessage('Ошибка при отправке кода: ' + error.message, 'error');
+      }
+    });
+    
+    // Подтверждение сброса пароля и установка нового пароля
+    confirmResetBtn.addEventListener('click', async function() {
+      const code = resetCodeInput.value.trim();
+      const newPassword = newPasswordInput.value;
+      
+      if (!code || !newPassword) {
+        showMessage('Пожалуйста, заполните все поля', 'error');
+        return;
+      }
+      
+      // Проверка длины пароля
+      if (newPassword.length < 6) {
+        showMessage('Пароль должен содержать минимум 6 символов', 'error');
+        return;
+      }
+      
+      try {
+        showMessage('Установка нового пароля...', 'info');
+        
+        // Проверяем код и устанавливаем новый пароль
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: tempUserData.email,
+          token: code,
+          type: 'recovery',
+          options: {
+            password: newPassword
+          }
+        });
+        
+        if (error) throw error;
+        
+        // Очищаем поля формы
+        resetCodeInput.value = '';
+        newPasswordInput.value = '';
+        
+        // Если все успешно, показываем форму входа
+        showMessage('Пароль успешно изменен! Теперь вы можете войти с новым паролем', 'success');
+        showForm(loginForm);
+      } catch (error) {
+        console.error('Ошибка при сбросе пароля:', error);
+        showMessage('Неверный код или истекло время действия кода', 'error');
+      }
+    });
+    
+    // Выход пользователя
+    logoutBtn.addEventListener('click', async function() {
+      try {
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) throw error;
+        
+        // После успешного выхода onAuthStateChange обработает событие SIGNED_OUT
+      } catch (error) {
+        console.error('Ошибка при выходе:', error);
+        showMessage('Ошибка при выходе: ' + error.message, 'error');
+      }
+    });
+    
+    // Функция для проверки авторизации
+    async function checkAuth() {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
+        if (session && session.user) {
+          // Нашли активную сессию, сохраняем ее
+          tempUserData.session = session;
+          
+          // Получаем данные пользователя для отображения
+          let userName;
+          
+          // Сначала пробуем получить имя из user_metadata
+          if (session.user.user_metadata && session.user.user_metadata.name) {
+            userName = session.user.user_metadata.name;
+          } else {
+            // Если нет в метаданных, пробуем получить из таблицы profiles
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (!profileError && profileData) {
+                userName = profileData.name;
+              }
+            } catch (profileError) {
+              console.error('Ошибка при получении профиля:', profileError);
+            }
+          }
+          
+          // Если имя все еще не найдено, используем email
+          userNameElement.textContent = userName || session.user.email;
+          
+          // Показываем профиль
+          showForm(profileContainer);
+        } else {
+          // Нет активной сессии, показываем форму входа
+          showForm(loginForm);
+        }
+      } catch (error) {
+        console.error('Ошибка при проверке авторизации:', error);
+        showMessage('Ошибка при проверке авторизации: ' + error.message, 'error');
+        showForm(loginForm);
+      }
+    }
+    
+    // Обработчик для подтверждения email напрямую без редиректа
+    async function handleEmailConfirmation(token, email) {
+      try {
+        showMessage('Подтверждение email...', 'info');
+        
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: email,
+          token: token,
+          type: 'signup'
+        });
+        
+        if (error) throw error;
+        
+        showMessage('Email успешно подтвержден!', 'success');
+        return true;
+      } catch (error) {
+        console.error('Ошибка при подтверждении email:', error);
+        showMessage('Ошибка при подтверждении email: ' + error.message, 'error');
+        return false;
+      }
+    }
+    
+    // Вспомогательные функции
+    function showMessage(message, type) {
+      authMessage.textContent = message;
+      authMessage.className = 'message ' + type;
+      authMessage.style.display = 'block';
+      
+      // Скрываем сообщение через 5 секунд
+      setTimeout(function() {
+        authMessage.style.display = 'none';
+      }, 5000);
+    }
+    
+    function hideAllForms() {
+      registerForm.classList.remove('active');
+      emailConfirmationForm.classList.remove('active');
+      loginForm.classList.remove
+      loginForm.classList.remove('active');
+      resetForm.classList.remove('active');
+      resetCodeForm.classList.remove('active');
+      profileContainer.classList.remove('active');
+    }
+    
+    function showForm(form) {
+      hideAllForms();
+      form.classList.add('active');
+    }
+    
+    // Проверка URL на наличие параметров для подтверждения email или сброса пароля
+    function checkURLParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      // Проверяем, есть ли токен для подтверждения email
+      const confirmToken = urlParams.get('confirmation_token');
+      if (confirmToken) {
+        // Извлекаем email из токена (если возможно)
+        try {
+          const tokenParts = confirmToken.split('.');
+          if (tokenParts.length > 1) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            if (payload && payload.email) {
+              handleEmailConfirmation(confirmToken, payload.email);
+            }
+          }
+        } catch (e) {
+          console.error('Ошибка при обработке токена:', e);
+        }
+      }
+      
+      // Проверяем, есть ли тип и токен для восстановления пароля
+      const type = urlParams.get('type');
+      const accessToken = urlParams.get('access_token');
+      if (type === 'recovery' && accessToken) {
+        // Показываем форму для сброса пароля
+        showForm(resetCodeForm);
+      }
+    }
+    
+    // Проверяем URL параметры при загрузке страницы
+    checkURLParams();
+  });
+</script>
