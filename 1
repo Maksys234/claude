@@ -1,0 +1,58 @@
+ <script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Функция для проверки и управления видимостью блоков
+  function toggleAuthBlocks() {
+    // Получаем блоки по ID
+    const authBlock = document.getElementById('rec881370175');
+    const profileBlock = document.getElementById('rec885048376');
+    
+    // Создаем клиент Supabase (используем тот же URL и ключ из твоего кода)
+    const supabaseUrl = 'https://xunitidnszlsqupiifhd.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bml0aWRuc3psc3F1cGlpZmhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY0MDQsImV4cCI6MjA1NjU5MjQwNH0.8v2dMEaAQYRhHmmJe15XkbA07Tsupc1iLT9oAsLEsWw';
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // Проверяем, авторизован ли пользователь
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('Ошибка при проверке сессии:', error);
+        return;
+      }
+      
+      const session = data.session;
+      
+      if (session && session.user) {
+        // Пользователь авторизован - показываем профиль, скрываем авторизацию
+        if (authBlock) authBlock.style.display = 'none';
+        if (profileBlock) profileBlock.style.display = 'block';
+      } else {
+        // Пользователь не авторизован - показываем авторизацию, скрываем профиль
+        if (authBlock) authBlock.style.display = 'block';
+        if (profileBlock) profileBlock.style.display = 'none';
+      }
+    });
+    
+    // Слушаем изменения авторизации
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (session && session.user) {
+        // Пользователь авторизован
+        if (authBlock) authBlock.style.display = 'none';
+        if (profileBlock) profileBlock.style.display = 'block';
+      } else {
+        // Пользователь не авторизован
+        if (authBlock) authBlock.style.display = 'block';
+        if (profileBlock) profileBlock.style.display = 'none';
+      }
+    });
+  }
+  
+  // Запускаем функцию
+  toggleAuthBlocks();
+});
+</script>
+<style>
+#rec885048376 {
+  display: none; /* По умолчанию личный кабинет скрыт */
+}
+</style>
