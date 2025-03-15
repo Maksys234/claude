@@ -1,0 +1,737 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/umd/supabase.js"></script>
+<!-- CSS для стилизации личного профиля -->
+<style>
+  .profile-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .profile-title {
+    font-size: 28px;
+    color: #333;
+    margin: 0;
+  }
+  
+  .profile-logout {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .profile-logout:hover {
+    background-color: #c82333;
+  }
+  
+  .profile-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .profile-card {
+    flex: 1;
+    min-width: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-card-title {
+    font-size: 18px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .profile-field {
+    margin-bottom: 15px;
+  }
+  
+  .profile-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .profile-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  
+  .profile-field input:disabled {
+    background-color: #f9f9f9;
+    color: #666;
+  }
+  
+  .profile-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .profile-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .profile-btn-primary {
+    background-color: #0066cc;
+    color: white;
+  }
+  
+  .profile-btn-primary:hover {
+    background-color: #0052a3;
+  }
+  
+  .profile-btn-secondary {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+  
+  .profile-btn-secondary:hover {
+    background-color: #e9ecef;
+  }
+  
+  .profile-alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+  }
+  
+  .profile-alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border-left: 4px solid #28a745;
+  }
+  
+  .profile-alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+  }
+  
+  .profile-alert-info {
+    background-color: #cce5ff;
+    color: #004085;
+    border-left: 4px solid #0066cc;
+  }
+  
+  .profile-activities {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .profile-activity {
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .profile-activity:last-child {
+    border-bottom: none;
+  }
+  
+  .profile-activity-date {
+    color: #666;
+    font-size: 12px;
+  }
+  
+  .tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .tab-button {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #0066cc;
+    color: #0066cc;
+    font-weight: bold;
+  }
+  
+  .tab-content {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+  
+  @media (max-width: 768px) {
+    .profile-content {
+      flex-direction: column;
+    }
+    
+    .profile-card {
+      min-width: auto;
+    }
+    
+    .tab-buttons {
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+</style>
+
+<!-- HTML для блока личного профиля -->
+<div id="user-profile-block" class="profile-wrapper" style="display: none;">
+  <!-- Сообщения статуса для профиля -->
+  <div id="profile-message" class="profile-alert" style="display: none;"></div>
+  
+  <div class="profile-header">
+    <h1 class="profile-title">Личный кабинет</h1>
+    <button id="profile-logout-btn" class="profile-logout">Выйти</button>
+  </div>
+  
+  <div class="tab-buttons">
+    <button id="tab-profile" class="tab-button active">Профиль</button>
+    <button id="tab-security" class="tab-button">Безопасность</button>
+    <button id="tab-activity" class="tab-button">Активность</button>
+  </div>
+  
+  <div id="content-profile" class="tab-content active">
+    <div class="profile-content">
+      <div class="profile-card">
+        <h2 class="profile-card-title">Личные данные</h2>
+        <div class="profile-field">
+          <label for="profile-name">Имя</label>
+          <input type="text" id="profile-name" disabled>
+        </div>
+        <div class="profile-field">
+          <label for="profile-email">Электронная почта</label>
+          <input type="email" id="profile-email" disabled>
+        </div>
+        <div class="profile-buttons">
+          <button id="edit-profile-btn" class="profile-btn profile-btn-primary">Редактировать</button>
+        </div>
+      </div>
+      
+      <div class="profile-card">
+        <h2 class="profile-card-title">Контактная информация</h2>
+        <div class="profile-field">
+          <label for="profile-phone">Телефон</label>
+          <input type="tel" id="profile-phone" disabled>
+        </div>
+        <div class="profile-field">
+          <label for="profile-address">Адрес</label>
+          <input type="text" id="profile-address" disabled>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="content-security" class="tab-content">
+    <div class="profile-content">
+      <div class="profile-card">
+        <h2 class="profile-card-title">Изменение пароля</h2>
+        <div class="profile-field">
+          <label for="current-password">Текущий пароль</label>
+          <input type="password" id="current-password">
+        </div>
+        <div class="profile-field">
+          <label for="new-password-profile">Новый пароль</label>
+          <input type="password" id="new-password-profile">
+        </div>
+        <div class="profile-field">
+          <label for="confirm-password">Подтверждение пароля</label>
+          <input type="password" id="confirm-password">
+        </div>
+        <div class="profile-buttons">
+          <button id="change-password-btn" class="profile-btn profile-btn-primary">Сменить пароль</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="content-activity" class="tab-content">
+    <div class="profile-content">
+      <div class="profile-card">
+        <h2 class="profile-card-title">История активности</h2>
+        <ul class="profile-activities" id="activity-list">
+          <!-- История активности будет добавлена через JavaScript -->
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно редактирования профиля -->
+<div id="edit-profile-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background-color: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 100%;">
+    <h2 style="margin-top: 0;">Редактирование профиля</h2>
+    
+    <div class="profile-field">
+      <label for="edit-profile-name">Имя</label>
+      <input type="text" id="edit-profile-name">
+    </div>
+    <div class="profile-field">
+      <label for="edit-profile-email">Электронная почта</label>
+      <input type="email" id="edit-profile-email">
+    </div>
+    <div class="profile-field">
+      <label for="edit-profile-phone">Телефон</label>
+      <input type="tel" id="edit-profile-phone">
+    </div>
+    <div class="profile-field">
+      <label for="edit-profile-address">Адрес</label>
+      <input type="text" id="edit-profile-address">
+    </div>
+    
+    <div class="profile-buttons" style="margin-top: 20px;">
+      <button id="save-profile-btn" class="profile-btn profile-btn-primary">Сохранить</button>
+      <button id="cancel-edit-btn" class="profile-btn profile-btn-secondary">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript для работы личного профиля -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Инициализация Supabase (используем те же ключи из предыдущего блока)
+  const supabaseUrl = 'https://xunitidnszlsqupiifhd.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1bml0aWRuc3psc3F1cGlpZmhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDEwMTY0MDQsImV4cCI6MjA1NjU5MjQwNH0.8v2dMEaAQYRhHmmJe15XkbA07Tsupc1iLT9oAsLEsWw';
+  
+  // Создание клиента Supabase
+  const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  
+  // Переменные для хранения данных пользователя
+  let currentUser = null;
+  let userProfile = {
+    name: '',
+    email: '',
+    phone: '',
+    address: ''
+  };
+  
+  // Получение DOM элементов
+  const userProfileBlock = document.getElementById('user-profile-block');
+  const profileMessage = document.getElementById('profile-message');
+  const profileLogoutBtn = document.getElementById('profile-logout-btn');
+  const profileNameInput = document.getElementById('profile-name');
+  const profileEmailInput = document.getElementById('profile-email');
+  const profilePhoneInput = document.getElementById('profile-phone');
+  const profileAddressInput = document.getElementById('profile-address');
+  const editProfileBtn = document.getElementById('edit-profile-btn');
+  const editProfileModal = document.getElementById('edit-profile-modal');
+  const editProfileNameInput = document.getElementById('edit-profile-name');
+  const editProfileEmailInput = document.getElementById('edit-profile-email');
+  const editProfilePhoneInput = document.getElementById('edit-profile-phone');
+  const editProfileAddressInput = document.getElementById('edit-profile-address');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+  const cancelEditBtn = document.getElementById('cancel-edit-btn');
+  const changePasswordBtn = document.getElementById('change-password-btn');
+  const currentPasswordInput = document.getElementById('current-password');
+  const newPasswordInput = document.getElementById('new-password-profile');
+  const confirmPasswordInput = document.getElementById('confirm-password');
+  const activityList = document.getElementById('activity-list');
+  
+  // Получение вкладок
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  // Проверка, авторизован ли пользователь
+  checkAuth();
+  
+  // Слушатель событий для изменения состояния авторизации
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN') {
+      currentUser = session.user;
+      loadUserProfile();
+      userProfileBlock.style.display = 'block';
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      userProfileBlock.style.display = 'none';
+    }
+  });
+  
+  // Обработчики событий для переключения вкладок
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const tabId = button.id.replace('tab-', 'content-');
+      
+      // Удаляем активный класс со всех кнопок и содержимого
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+      
+      // Делаем активной выбранную вкладку
+      button.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      
+      // Если выбрана вкладка активности, загружаем данные
+      if (tabId === 'content-activity') {
+        loadUserActivity();
+      }
+    });
+  });
+  
+  // Обработчик для кнопки выхода
+  profileLogoutBtn.addEventListener('click', async function() {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      showProfileMessage('Вы успешно вышли из системы', 'success');
+    } catch (error) {
+      console.error('Ошибка при выходе:', error);
+      showProfileMessage('Ошибка при выходе: ' + error.message, 'danger');
+    }
+  });
+  
+  // Обработчик для кнопки редактирования профиля
+  editProfileBtn.addEventListener('click', function() {
+    // Заполняем поля модального окна текущими данными
+    editProfileNameInput.value = userProfile.name || '';
+    editProfileEmailInput.value = userProfile.email || '';
+    editProfilePhoneInput.value = userProfile.phone || '';
+    editProfileAddressInput.value = userProfile.address || '';
+    
+    // Показываем модальное окно
+    editProfileModal.style.display = 'flex';
+  });
+  
+  // Обработчик для кнопки отмены редактирования
+  cancelEditBtn.addEventListener('click', function() {
+    editProfileModal.style.display = 'none';
+  });
+  
+  // Обработчик для кнопки сохранения изменений профиля
+  saveProfileBtn.addEventListener('click', async function() {
+    const updatedName = editProfileNameInput.value.trim();
+    const updatedEmail = editProfileEmailInput.value.trim();
+    const updatedPhone = editProfilePhoneInput.value.trim();
+    const updatedAddress = editProfileAddressInput.value.trim();
+    
+    if (!updatedName || !updatedEmail) {
+      showProfileMessage('Имя и Email обязательны для заполнения', 'danger');
+      return;
+    }
+    
+    try {
+      // Обновляем данные в таблице profiles
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert([
+          {
+            id: currentUser.id,
+            name: updatedName,
+            email: updatedEmail,
+            phone: updatedPhone,
+            address: updatedAddress,
+            updated_at: new Date()
+          }
+        ]);
+      
+      if (error) throw error;
+      
+      // Если email изменился, обновляем его в аутентификации
+      if (updatedEmail !== currentUser.email) {
+        const { error: authError } = await supabase.auth.updateUser({
+          email: updatedEmail
+        });
+        
+        if (authError) throw authError;
+        
+        showProfileMessage('Email изменен. Пожалуйста, подтвердите новый email по ссылке в письме', 'info');
+      }
+      
+      // Обновляем метаданные пользователя
+      const { error: metadataError } = await supabase.auth.updateUser({
+        data: { name: updatedName }
+      });
+      
+      if (metadataError) throw metadataError;
+      
+      // Обновляем локальные данные
+      userProfile = {
+        name: updatedName,
+        email: updatedEmail,
+        phone: updatedPhone,
+        address: updatedAddress
+      };
+      
+      // Обновляем отображаемые данные
+      updateProfileDisplay();
+      
+      // Скрываем модальное окно
+      editProfileModal.style.display = 'none';
+      
+      showProfileMessage('Профиль успешно обновлен', 'success');
+      
+      // Добавляем запись в активность
+      addActivityRecord('Обновление профиля');
+      
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      showProfileMessage('Ошибка при обновлении профиля: ' + error.message, 'danger');
+    }
+  });
+  
+  // Обработчик для смены пароля
+  changePasswordBtn.addEventListener('click', async function() {
+    const currentPassword = currentPasswordInput.value;
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showProfileMessage('Пожалуйста, заполните все поля для смены пароля', 'danger');
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      showProfileMessage('Новый пароль должен содержать минимум 6 символов', 'danger');
+      return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+      showProfileMessage('Пароли не совпадают', 'danger');
+      return;
+    }
+    
+    try {
+      // Сначала выполняем вход с текущим паролем для проверки
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: currentPassword
+      });
+      
+      if (signInError) {
+        throw new Error('Неверный текущий пароль');
+      }
+      
+      // Обновляем пароль
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      
+      if (error) throw error;
+      
+      // Очищаем поля формы
+      currentPasswordInput.value = '';
+      newPasswordInput.value = '';
+      confirmPasswordInput.value = '';
+      
+      showProfileMessage('Пароль успешно изменен', 'success');
+      
+      // Добавляем запись в активность
+      addActivityRecord('Смена пароля');
+      
+    } catch (error) {
+      console.error('Ошибка при смене пароля:', error);
+      showProfileMessage('Ошибка при смене пароля: ' + error.message, 'danger');
+    }
+  });
+  
+  // Функция для проверки авторизации пользователя
+  async function checkAuth() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+      
+      if (session && session.user) {
+        currentUser = session.user;
+        loadUserProfile();
+        userProfileBlock.style.display = 'block';
+      } else {
+        userProfileBlock.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Ошибка при проверке авторизации:', error);
+      showProfileMessage('Ошибка при проверке авторизации: ' + error.message, 'danger');
+    }
+  }
+  
+  // Функция для загрузки данных профиля пользователя
+  async function loadUserProfile() {
+    if (!currentUser) return;
+    
+    try {
+      // Попытка получить данные из таблицы profiles
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        // Ошибка, кроме "нет результатов"
+        throw error;
+      }
+      
+      // Если нашли профиль в базе данных
+      if (data) {
+        userProfile = {
+          name: data.name || '',
+          email: currentUser.email,
+          phone: data.phone || '',
+          address: data.address || ''
+        };
+      } else {
+        // Если профиля нет в базе, создаем его из данных аутентификации
+        userProfile = {
+          name: currentUser.user_metadata?.name || '',
+          email: currentUser.email,
+          phone: '',
+          address: ''
+        };
+        
+        // Создаем запись в таблице profiles, если её еще нет
+        await supabase.from('profiles').upsert({
+          id: currentUser.id,
+          name: userProfile.name,
+          email: userProfile.email,
+          created_at: new Date()
+        });
+      }
+      
+      // Обновляем отображение данных
+      updateProfileDisplay();
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке профиля:', error);
+      showProfileMessage('Ошибка при загрузке данных профиля: ' + error.message, 'danger');
+    }
+  }
+  
+  // Функция для обновления отображаемых данных профиля
+  function updateProfileDisplay() {
+    profileNameInput.value = userProfile.name;
+    profileEmailInput.value = userProfile.email;
+    profilePhoneInput.value = userProfile.phone || '';
+    profileAddressInput.value = userProfile.address || '';
+  }
+  
+  // Функция для загрузки истории активности пользователя
+  async function loadUserActivity() {
+    if (!currentUser) return;
+    
+    try {
+      // Получаем историю активности из таблицы activity
+      const { data, error } = await supabase
+        .from('user_activity')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      
+      // Очищаем список активности
+      activityList.innerHTML = '';
+      
+      // Если данных нет, показываем сообщение
+      if (!data || data.length === 0) {
+        activityList.innerHTML = '<li class="profile-activity">История активности пуста</li>';
+        return;
+      }
+      
+      // Добавляем данные в список
+      data.forEach(activity => {
+        const date = new Date(activity.created_at);
+        const li = document.createElement('li');
+        li.className = 'profile-activity';
+        li.innerHTML = `
+          <span>${activity.action}</span>
+          <span class="profile-activity-date">${formatDate(date)}</span>
+        `;
+        activityList.appendChild(li);
+      });
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке активности:', error);
+      showProfileMessage('Ошибка при загрузке истории активности: ' + error.message, 'danger');
+    }
+  }
+  
+  // Функция для добавления записи в активность пользователя
+  async function addActivityRecord(action) {
+    if (!currentUser) return;
+    
+    try {
+      // Добавляем запись в таблицу активности
+      const { error } = await supabase
+        .from('user_activity')
+        .insert([
+          {
+            user_id: currentUser.id,
+            action: action,
+            created_at: new Date()
+          }
+        ]);
+      
+      if (error) throw error;
+      
+      // Если открыта вкладка активности, обновляем данные
+      if (document.getElementById('content-activity').classList.contains('active')) {
+        loadUserActivity();
+      }
+      
+    } catch (error) {
+      console.error('Ошибка при добавлении активности:', error);
+      // Не показываем сообщение пользователю, чтобы не отвлекать
+    }
+  }
+  
+  // Функция для форматирования даты
+  function formatDate(date) {
+    return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+  }
+  
+  // Функция для отображения сообщений
+  function showProfileMessage(message, type) {
+    profileMessage.textContent = message;
+    profileMessage.className = 'profile-alert profile-alert-' + type;
+    profileMessage.style.display = 'block';
+    
+    // Скрываем сообщение через 5 секунд
+    setTimeout(function() {
+      profileMessage.style.display = 'none';
+    }, 5000);
+  }
+  
+  // Добавляем обработчик для клика на фон модального окна - закрытие окна
+  editProfileModal.addEventListener('click', function(event) {
+    if (event.target === editProfileModal) {
+      editProfileModal.style.display = 'none';
+    }
+  });
+});
+</script>
